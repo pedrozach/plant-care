@@ -1,12 +1,486 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plant Care - Watering Guide</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meu Jardim Interior</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --green-deep: #1a3320;
+      --green-mid: #2e5e3e;
+      --green-light: #4a8c5c;
+      --green-pale: #a8d5b5;
+      --cream: #f5f0e8;
+      --warm-white: #fdfaf4;
+      --terracotta: #c4602a;
+      --gold: #d4a847;
+      --text-dark: #1a1a14;
+      --text-mid: #4a4a3a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--warm-white);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text-dark);
+      overflow-x: hidden;
+    }
+
+    /* Grain texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.5;
+    }
+
+    /* Header */
+    header {
+      background: var(--green-deep);
+      padding: 80px 40px 60px;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--green-light) 0%, transparent 70%);
+      opacity: 0.3;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: -40px;
+      width: 250px; height: 250px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--green-mid) 0%, transparent 70%);
+      opacity: 0.4;
+    }
+
+    .header-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--green-pale);
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 2;
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      color: var(--cream);
+      line-height: 1.1;
+      position: relative;
+      z-index: 2;
+      font-weight: 400;
+    }
+
+    header h1 em {
+      font-style: italic;
+      color: var(--green-pale);
+    }
+
+    .header-subtitle {
+      margin-top: 18px;
+      color: var(--green-pale);
+      font-size: 15px;
+      font-weight: 300;
+      letter-spacing: 0.5px;
+      position: relative;
+      z-index: 2;
+      opacity: 0.8;
+    }
+
+    .leaf-deco {
+      position: absolute;
+      z-index: 1;
+      opacity: 0.12;
+      font-size: 120px;
+    }
+    .leaf-deco.l1 { top: 10px; left: 20px; transform: rotate(-20deg); }
+    .leaf-deco.l2 { bottom: -10px; right: 30px; transform: rotate(15deg); font-size: 90px; }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2px;
+      padding: 2px;
+      background: #d6cfc3;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--warm-white);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.4s cubic-bezier(.25,.8,.25,1);
+      animation: fadeUp 0.6s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.12s; }
+    .card:nth-child(3) { animation-delay: 0.19s; }
+    .card:nth-child(4) { animation-delay: 0.26s; }
+    .card:nth-child(5) { animation-delay: 0.33s; }
+    .card:nth-child(6) { animation-delay: 0.40s; }
+    .card:nth-child(7) { animation-delay: 0.47s; }
+
+    .card:hover { transform: scale(1.015); z-index: 10; }
+
+    .card-image-wrap {
+      width: 100%;
+      height: 240px;
+      overflow: hidden;
+      position: relative;
+      background: var(--green-deep);
+    }
+
+    .card-image-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.6s cubic-bezier(.25,.8,.25,1);
+      filter: brightness(0.92) saturate(1.1);
+    }
+    .card:hover .card-image-wrap img { transform: scale(1.07); }
+
+    .card-image-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(26,51,32,0.55) 0%, transparent 60%);
+    }
+
+    .card-number {
+      position: absolute;
+      top: 14px; right: 16px;
+      font-family: 'Playfair Display', serif;
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      z-index: 2;
+      letter-spacing: 1px;
+    }
+
+    .card-body {
+      padding: 24px 28px 28px;
+      border-top: 3px solid var(--green-pale);
+    }
+
+    .plant-family {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--green-light);
+      margin-bottom: 8px;
+    }
+
+    .plant-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--green-deep);
+      line-height: 1.2;
+      margin-bottom: 18px;
+    }
+
+    .care-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .care-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 6px;
+      background: var(--cream);
+      border-left: 3px solid transparent;
+    }
+
+    .care-item.sun { border-left-color: var(--gold); }
+    .care-item.water { border-left-color: #6baed6; }
+
+    .care-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .care-content { flex: 1; }
+
+    .care-label {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--text-mid);
+      margin-bottom: 3px;
+    }
+
+    .care-text {
+      font-size: 13.5px;
+      font-weight: 400;
+      color: var(--text-dark);
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 50px 20px 40px;
+      background: var(--green-deep);
+      color: var(--green-pale);
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      font-weight: 300;
+    }
+    footer strong {
+      display: block;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      font-weight: 400;
+      margin-bottom: 6px;
+      color: var(--cream);
+    }
+  </style>
 </head>
 <body>
-  <h1>Plant Care - Watering Guide</h1>
-  <p>Coming soon...</p>
+
+<header>
+  <div class="leaf-deco l1">🌿</div>
+  <div class="leaf-deco l2">🍃</div>
+  <p class="header-label">Guia de Cuidados</p>
+  <h1>Meu Jardim <em>Interior</em></h1>
+  <p class="header-subtitle">Luz · Água · Amor — tudo o que as tuas plantas precisam</p>
+</header>
+
+<div class="grid">
+
+  <!-- 1. Hedera — mais água (5–10 dias) -->
+  <div class="card">
+    <div class="card-image-wrap">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Hedera_helix_flowers_berries.jpg/800px-Hedera_helix_flowers_berries.jpg" alt="Hedera" onerror="this.src='https://placehold.co/400x240/1a3320/a8d5b5?text=🌿'"/>
+      <span class="card-number">01</span>
+    </div>
+    <div class="card-body">
+      <p class="plant-family">Araliaceae</p>
+      <h2 class="plant-name">Hedera (Hera)</h2>
+      <div class="care-section">
+        <div class="care-item sun">
+          <span class="care-icon">☀️</span>
+          <div class="care-content">
+            <p class="care-label">Exposição Solar</p>
+            <p class="care-text">Luz indireta a sombra parcial. Prefere ambientes mais frescos e luminosos sem sol direto. Variedades com folha verde escura aguentam melhor a sombra.</p>
+          </div>
+        </div>
+        <div class="care-item water">
+          <span class="care-icon">💧</span>
+          <div class="care-content">
+            <p class="care-label">Rega</p>
+            <p class="care-text">Manter o solo levemente húmido — regar quando a camada superficial estiver seca. A cada 5–10 dias. Gosta de humidade; pulverizar as folhas regularmente é benéfico.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Begônia Rex (7–10 dias) -->
+  <div class="card">
+    <div class="card-image-wrap">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Begonia_rex_cultivar.jpg/800px-Begonia_rex_cultivar.jpg" alt="Begônia Rex" onerror="this.src='https://placehold.co/400x240/1a3320/a8d5b5?text=🌿'"/>
+      <span class="card-number">02</span>
+    </div>
+    <div class="card-body">
+      <p class="plant-family">Begoniaceae</p>
+      <h2 class="plant-name">Begônia Rex</h2>
+      <div class="care-section">
+        <div class="care-item sun">
+          <span class="care-icon">☀️</span>
+          <div class="care-content">
+            <p class="care-label">Exposição Solar</p>
+            <p class="care-text">Luz indireta brilhante a média. Evitar sol direto que queima as folhas decorativas. Um lugar junto a uma janela virada a norte ou leste é ideal para preservar as cores vibrantes.</p>
+          </div>
+        </div>
+        <div class="care-item water">
+          <span class="care-icon">💧</span>
+          <div class="care-content">
+            <p class="care-label">Rega</p>
+            <p class="care-text">Regar quando os primeiros 2–3 cm do solo estiverem secos, a cada 7–10 dias. Evitar molhar as folhas para prevenir fungos. Prefere humidade elevada no ambiente — usar um tabuleiro com pedras e água.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Jibóia (1–2 semanas) -->
+  <div class="card">
+    <div class="card-image-wrap">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Epipremnum_aureum_31082012.jpg/800px-Epipremnum_aureum_31082012.jpg" alt="Jibóia" onerror="this.src='https://placehold.co/400x240/1a3320/a8d5b5?text=🌿'"/>
+      <span class="card-number">03</span>
+    </div>
+    <div class="card-body">
+      <p class="plant-family">Araceae</p>
+      <h2 class="plant-name">Jibóia</h2>
+      <div class="care-section">
+        <div class="care-item sun">
+          <span class="care-icon">☀️</span>
+          <div class="care-content">
+            <p class="care-label">Exposição Solar</p>
+            <p class="care-text">Luz indireta média a baixa. Adapta-se muito bem a ambientes com pouca luz. Folhas variegadas precisam de mais luz para manter o padrão.</p>
+          </div>
+        </div>
+        <div class="care-item water">
+          <span class="care-icon">💧</span>
+          <div class="care-content">
+            <p class="care-label">Rega</p>
+            <p class="care-text">Regar quando o topo do solo (2–3 cm) estiver seco — aproximadamente a cada 1–2 semanas. Evitar encharcamento para prevenir apodrecimento das raízes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Ficus Tineke (1–2 semanas, solo mais seco) -->
+  <div class="card">
+    <div class="card-image-wrap">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Ficus_elastica_-_variegated_form.jpg/800px-Ficus_elastica_-_variegated_form.jpg" alt="Ficus Tineke" onerror="this.src='https://placehold.co/400x240/1a3320/a8d5b5?text=🌿'"/>
+      <span class="card-number">04</span>
+    </div>
+    <div class="card-body">
+      <p class="plant-family">Moraceae</p>
+      <h2 class="plant-name">Ficus Tineke</h2>
+      <div class="care-section">
+        <div class="care-item sun">
+          <span class="care-icon">☀️</span>
+          <div class="care-content">
+            <p class="care-label">Exposição Solar</p>
+            <p class="care-text">Luz indireta brilhante. Para manter as cores brancas e rosas das folhas variegadas é essencial boa luminosidade. Evitar sol direto.</p>
+          </div>
+        </div>
+        <div class="care-item water">
+          <span class="care-icon">💧</span>
+          <div class="care-content">
+            <p class="care-label">Rega</p>
+            <p class="care-text">Regar quando os primeiros 3–5 cm do solo estiverem secos, a cada 1–2 semanas. Pulverizar as folhas para aumentar a humidade. Não tolera raízes encharcadas.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Espada de São Jorge (1–4 semanas) -->
+  <div class="card">
+    <div class="card-image-wrap">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Snake_Plant_%28Sansevieria_trifasciata_%27Laurentii%27%29.jpg/800px-Snake_Plant_%28Sansevieria_trifasciata_%27Laurentii%27%29.jpg" alt="Espada de São Jorge" onerror="this.src='https://placehold.co/400x240/1a3320/a8d5b5?text=🌿'"/>
+      <span class="card-number">05</span>
+    </div>
+    <div class="card-body">
+      <p class="plant-family">Asparagaceae</p>
+      <h2 class="plant-name">Espada de São Jorge</h2>
+      <div class="care-section">
+        <div class="care-item sun">
+          <span class="care-icon">☀️</span>
+          <div class="care-content">
+            <p class="care-label">Exposição Solar</p>
+            <p class="care-text">Luz indireta a sombra parcial. Tolera pouca luz mas cresce melhor com luz indireta brilhante. Evitar sol direto intenso.</p>
+          </div>
+        </div>
+        <div class="care-item water">
+          <span class="care-icon">💧</span>
+          <div class="care-content">
+            <p class="care-label">Rega</p>
+            <p class="care-text">Regas espaçadas — a cada 2–4 semanas no inverno, 1–2 semanas no verão. Deixar o solo secar completamente entre regas. Muito tolerante à seca.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Haworthia (2–3 semanas / mensal) -->
+  <div class="card">
+    <div class="card-image-wrap">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Haworthia_fasciata2.jpg/800px-Haworthia_fasciata2.jpg" alt="Haworthia" onerror="this.src='https://placehold.co/400x240/1a3320/a8d5b5?text=🌿'"/>
+      <span class="card-number">06</span>
+    </div>
+    <div class="card-body">
+      <p class="plant-family">Asphodelaceae · Suculenta</p>
+      <h2 class="plant-name">Haworthia</h2>
+      <div class="care-section">
+        <div class="care-item sun">
+          <span class="care-icon">☀️</span>
+          <div class="care-content">
+            <p class="care-label">Exposição Solar</p>
+            <p class="care-text">Luz indireta brilhante. Ao contrário da maioria das suculentas, tolera bem a sombra parcial. Sol direto intenso pode queimar as folhas e deixá-las amareladas. Perfeita para interior.</p>
+          </div>
+        </div>
+        <div class="care-item water">
+          <span class="care-icon">💧</span>
+          <div class="care-content">
+            <p class="care-label">Rega</p>
+            <p class="care-text">Regar apenas quando o solo estiver completamente seco — a cada 2–3 semanas no verão, uma vez por mês no inverno. Suculenta típica: muito mais tolerante ao esquecimento do que ao excesso de água.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Sansevieria — menos água (mensal no inverno) -->
+  <div class="card">
+    <div class="card-image-wrap">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Sansevieria_trifasciata_var._laurentii.jpg/800px-Sansevieria_trifasciata_var._laurentii.jpg" alt="Sansevieria" onerror="this.src='https://placehold.co/400x240/1a3320/a8d5b5?text=🌿'"/>
+      <span class="card-number">07</span>
+    </div>
+    <div class="card-body">
+      <p class="plant-family">Asparagaceae</p>
+      <h2 class="plant-name">Sansevieria</h2>
+      <div class="care-section">
+        <div class="care-item sun">
+          <span class="care-icon">☀️</span>
+          <div class="care-content">
+            <p class="care-label">Exposição Solar</p>
+            <p class="care-text">Extremamente adaptável — suporta desde sombra profunda a sol direto. O crescimento é mais rápido com luz indireta brilhante. Uma das plantas mais resistentes à sombra.</p>
+          </div>
+        </div>
+        <div class="care-item water">
+          <span class="care-icon">💧</span>
+          <div class="care-content">
+            <p class="care-label">Rega</p>
+            <p class="care-text">Muito resistente à seca — regar apenas quando o solo estiver completamente seco. No inverno pode bastar uma rega por mês. O excesso de água é o principal risco.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <strong>🌱 Meu Jardim Interior</strong>
+  Criado com carinho para nunca mais esquecer de regar as plantas.
+</footer>
+
 </body>
 </html>
