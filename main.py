@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 load_dotenv()
 
@@ -112,3 +114,11 @@ def water_plant(
             (plant_id, watered_at),
         )
     return {"ok": True}
+
+
+@app.get("/")
+def serve_index():
+    return FileResponse("index.html")
+
+
+app.mount("/images", StaticFiles(directory="images"), name="images")
