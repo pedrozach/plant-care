@@ -265,6 +265,23 @@
       margin-bottom: 6px;
       color: var(--cream);
     }
+    /* Status badges */
+    .status-badge {
+      position: absolute;
+      top: 12px; left: 14px;
+      z-index: 3;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 20px;
+      color: #fff;
+    }
+    .status-ok       { background: #2e7d32; }
+    .status-due_soon { background: #e65100; }
+    .status-overdue  { background: #b71c1c; }
+    .status-never    { background: #546e7a; }
   </style>
 </head>
 <body>
@@ -280,10 +297,11 @@
 <div class="grid">
 
   <!-- 1. Hedera — mais água (5–10 dias) -->
-  <div class="card">
+  <div class="card" data-plant-id="hedera">
     <div class="card-image-wrap">
       <img src="images/hedera.jpg" alt="Hedera"/>
       <span class="card-number">01</span>
+      <span class="status-badge status-never">A carregar…</span>
     </div>
     <div class="card-body">
       <p class="plant-family">Araliaceae</p>
@@ -308,10 +326,11 @@
   </div>
 
   <!-- 2. Begônia Rex (7–10 dias) -->
-  <div class="card">
+  <div class="card" data-plant-id="begonia">
     <div class="card-image-wrap">
       <img src="images/begonia.jpg" alt="Begônia Rex"/>
       <span class="card-number">02</span>
+      <span class="status-badge status-never">A carregar…</span>
     </div>
     <div class="card-body">
       <p class="plant-family">Begoniaceae</p>
@@ -336,10 +355,11 @@
   </div>
 
   <!-- 3. Jibóia (1–2 semanas) -->
-  <div class="card">
+  <div class="card" data-plant-id="jiboia">
     <div class="card-image-wrap">
       <img src="images/jiboia.jpg" alt="Jibóia"/>
       <span class="card-number">03</span>
+      <span class="status-badge status-never">A carregar…</span>
     </div>
     <div class="card-body">
       <p class="plant-family">Araceae</p>
@@ -364,10 +384,11 @@
   </div>
 
   <!-- 4. Ficus Tineke (1–2 semanas, solo mais seco) -->
-  <div class="card">
+  <div class="card" data-plant-id="ficus">
     <div class="card-image-wrap">
       <img src="images/ficus.jpg" alt="Ficus Tineke"/>
       <span class="card-number">04</span>
+      <span class="status-badge status-never">A carregar…</span>
     </div>
     <div class="card-body">
       <p class="plant-family">Moraceae</p>
@@ -392,10 +413,11 @@
   </div>
 
   <!-- 5. Espada de São Jorge (1–4 semanas) -->
-  <div class="card">
+  <div class="card" data-plant-id="espada">
     <div class="card-image-wrap">
       <img src="images/espada.jpg" alt="Espada de São Jorge"/>
       <span class="card-number">05</span>
+      <span class="status-badge status-never">A carregar…</span>
     </div>
     <div class="card-body">
       <p class="plant-family">Asparagaceae</p>
@@ -420,10 +442,11 @@
   </div>
 
   <!-- 6. Haworthia (2–3 semanas / mensal) -->
-  <div class="card">
+  <div class="card" data-plant-id="haworthia">
     <div class="card-image-wrap">
       <img src="images/haworthia.jpg" alt="Haworthia"/>
       <span class="card-number">06</span>
+      <span class="status-badge status-never">A carregar…</span>
     </div>
     <div class="card-body">
       <p class="plant-family">Asphodelaceae · Suculenta</p>
@@ -448,10 +471,11 @@
   </div>
 
   <!-- 7. Sansevieria — menos água (mensal no inverno) -->
-  <div class="card">
+  <div class="card" data-plant-id="sansevieria">
     <div class="card-image-wrap">
       <img src="images/sansevieria.jpg" alt="Sansevieria"/>
       <span class="card-number">07</span>
+      <span class="status-badge status-never">A carregar…</span>
     </div>
     <div class="card-body">
       <p class="plant-family">Asparagaceae</p>
