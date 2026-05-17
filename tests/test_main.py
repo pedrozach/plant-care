@@ -46,3 +46,35 @@ def test_compute_status_boundary_due_soon():
     now = datetime(2026, 5, 17, 12, 0, 0, tzinfo=timezone.utc)
     last = datetime(2026, 5, 12, 12, 0, 0, tzinfo=timezone.utc)  # 5 days ago, frequency 7
     assert compute_status(7, last.isoformat(), now=now) == "due_soon"
+
+
+def test_get_waterings_all_plants_returned(client):
+    res = client.get("/api/waterings")
+    assert res.status_code == 200
+    data = res.json()
+    plant_ids = {item["plant_id"] for item in data}
+    assert plant_ids == {
+        "hedera", "begonia", "jiboia", "ficus",
+        "espada", "haworthia", "sansevieria",
+    }
+
+
+def test_get_waterings_never_status_when_no_log(client):
+    res = client.get("/api/waterings")
+    for item in res.json():
+        assert item["status"] == "never"
+        assert item["last_watered"] is None
+
+
+def test_get_waterings_ok_status_after_watering(client):
+    from main import get_db
+    now = datetime.now(timezone.utc).isoformat()
+    with get_db() as conn:
+        conn.execute(
+            "INSERT INTO watering_logs (plant_id, watered_at) VALUES (?, ?)",
+            ("hedera", now),
+        )
+    res = client.get("/api/waterings")
+    hedera = next(item for item in res.json() if item["plant_id"] == "hedera")
+    assert hedera["status"] == "ok"
+    assert hedera["last_watered"] is not None

@@ -75,3 +75,21 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+@app.get("/api/waterings")
+def get_waterings():
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT plant_id, MAX(watered_at) AS watered_at "
+            "FROM watering_logs GROUP BY plant_id"
+        ).fetchall()
+    last_by_plant = {row["plant_id"]: row["watered_at"] for row in rows}
+    return [
+        {
+            "plant_id": pid,
+            "last_watered": last_by_plant.get(pid),
+            "status": compute_status(plant["frequency_days"], last_by_plant.get(pid)),
+        }
+        for pid, plant in PLANTS.items()
+    ]
