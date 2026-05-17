@@ -25,6 +25,9 @@ def get_db():
 
 
 def init_db() -> None:
+    db_dir = os.path.dirname(_db_path())
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
     with get_db() as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS watering_logs (

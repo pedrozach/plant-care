@@ -12,7 +12,6 @@ def setup_env(tmp_path, monkeypatch):
 
 @pytest.fixture
 def client():
-    from main import app, init_db
-    init_db()
+    from main import app
     with TestClient(app) as c:
         yield c
