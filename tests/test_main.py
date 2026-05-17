@@ -78,3 +78,40 @@ def test_get_waterings_ok_status_after_watering(client):
     hedera = next(item for item in res.json() if item["plant_id"] == "hedera")
     assert hedera["status"] == "ok"
     assert hedera["last_watered"] is not None
+
+
+def test_water_plant_success(client):
+    res = client.post(
+        "/api/water/hedera",
+        headers={"X-App-Secret": "secret123"},
+    )
+    assert res.status_code == 201
+    assert res.json() == {"ok": True}
+
+
+def test_water_plant_updates_status(client):
+    client.post("/api/water/hedera", headers={"X-App-Secret": "secret123"})
+    waterings = client.get("/api/waterings").json()
+    hedera = next(item for item in waterings if item["plant_id"] == "hedera")
+    assert hedera["status"] == "ok"
+
+
+def test_water_plant_wrong_secret_returns_401(client):
+    res = client.post(
+        "/api/water/hedera",
+        headers={"X-App-Secret": "wrong"},
+    )
+    assert res.status_code == 401
+
+
+def test_water_plant_missing_secret_returns_401(client):
+    res = client.post("/api/water/hedera")
+    assert res.status_code == 401
+
+
+def test_water_plant_unknown_plant_returns_404(client):
+    res = client.post(
+        "/api/water/unknown-plant",
+        headers={"X-App-Secret": "secret123"},
+    )
+    assert res.status_code == 404

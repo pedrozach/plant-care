@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timezone
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
 
 load_dotenv()
 
@@ -93,3 +93,21 @@ def get_waterings():
         }
         for pid, plant in PLANTS.items()
     ]
+
+
+@app.post("/api/water/{plant_id}", status_code=201)
+def water_plant(
+    plant_id: str,
+    x_app_secret: str | None = Header(default=None),
+):
+    if x_app_secret != os.getenv("APP_SECRET", ""):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    if plant_id not in PLANTS:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    watered_at = datetime.now(timezone.utc).isoformat()
+    with get_db() as conn:
+        conn.execute(
+            "INSERT INTO watering_logs (plant_id, watered_at) VALUES (?, ?)",
+            (plant_id, watered_at),
+        )
+    return {"ok": True}
