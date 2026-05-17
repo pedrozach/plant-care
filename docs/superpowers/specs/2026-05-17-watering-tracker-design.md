@@ -5,20 +5,25 @@
 
 ## Overview
 
-Add a watering tracker to the existing "Meu Jardim Interior" plant care page. Users open the page to see which plants need watering. A password-protected button lets the owner log "watered today" for each plant. Data is persisted in Supabase.
+Add a watering tracker to the existing "Meu Jardim Interior" plant care page. Users open the page to see which plants need watering. A password-protected button lets the owner log "watered today" for each plant. Data is persisted in a local SQLite file.
 
 ## Architecture
 
 ```
 plant-care/
 ├── pyproject.toml       # UV-managed dependencies
-├── .env                 # APP_SECRET, SUPABASE_URL, SUPABASE_KEY
+├── .env                 # APP_SECRET only
 ├── main.py              # FastAPI app
+├── railway.toml         # Railway deployment config (points volume at /data)
 ├── index.html           # Existing page, extended with tracker UI
-└── images/              # Existing plant photos
+├── images/              # Existing plant photos
+└── data/                # SQLite file lives here (mounted as Railway volume)
+    └── .gitkeep
 ```
 
-**Stack:** Python 3.12+, UV, FastAPI, uvicorn, supabase-py, python-dotenv.
+**Stack:** Python 3.12+, UV, FastAPI, uvicorn, python-dotenv. No external database service.
+
+**Hosting:** Railway runs the FastAPI process. A Railway persistent volume is mounted at `/data` so `data/waterings.db` survives container restarts and redeploys.
 
 FastAPI serves two roles:
 1. Static file server for `index.html` and `images/`
@@ -54,17 +59,17 @@ Logs "watered today" for the given plant. Requires `X-App-Secret` header matchin
 
 ## Data Model
 
-**Supabase table: `watering_logs`**
+**SQLite table: `watering_logs`** — created automatically on startup if it doesn't exist.
 
 ```sql
-create table watering_logs (
-  id         uuid primary key default gen_random_uuid(),
-  plant_id   text not null,
-  watered_at timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS watering_logs (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  plant_id   TEXT NOT NULL,
+  watered_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 ```
 
-RLS is enabled with permissive policies for the `anon` role (reads and writes both allowed). The password gate lives in FastAPI, not in Supabase policies.
+`watered_at` is stored as an ISO 8601 string in UTC. The file path is `data/waterings.db`, configurable via `DB_PATH` env var so it can be overridden to `/data/waterings.db` in the Railway environment.
 
 ## Plant Registry
 
@@ -98,7 +103,13 @@ Each plant card is extended with:
 
 - Wrong password → FastAPI returns 401 → JS clears localStorage, shows brief error message on the card
 - Unknown plant_id → FastAPI returns 404 → JS shows console warning (silent to user)
-- Supabase unreachable → FastAPI propagates 503 → JS shows a generic "não foi possível carregar" message in place of status badges
+- DB unavailable → FastAPI returns 503 → JS shows a generic "não foi possível carregar" message in place of status badges
+
+## Deployment (Railway)
+
+- `railway.toml` sets the start command (`uvicorn main:app --host 0.0.0.0 --port $PORT`) and declares the `/data` volume mount
+- `APP_SECRET` and `DB_PATH=/data/waterings.db` are set as Railway environment variables
+- Every push to `main` on GitHub triggers an automatic redeploy; the SQLite file on the volume is unaffected
 
 ## Out of Scope
 
