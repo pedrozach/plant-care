@@ -100,7 +100,8 @@ def water_plant(
     plant_id: str,
     x_app_secret: str | None = Header(default=None),
 ):
-    if x_app_secret != os.getenv("APP_SECRET", ""):
+    secret = os.getenv("APP_SECRET")
+    if not secret or x_app_secret != secret:
         raise HTTPException(status_code=401, detail="Unauthorized")
     if plant_id not in PLANTS:
         raise HTTPException(status_code=404, detail="Plant not found")
