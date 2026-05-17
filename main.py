@@ -8,6 +8,36 @@ from fastapi import FastAPI
 
 load_dotenv()
 
+PLANTS: dict[str, dict] = {
+    "hedera":      {"name": "Hedera (Hera)",        "frequency_days": 7},
+    "begonia":     {"name": "Begônia Rex",           "frequency_days": 8},
+    "jiboia":      {"name": "Jibóia",               "frequency_days": 10},
+    "ficus":       {"name": "Ficus Tineke",          "frequency_days": 10},
+    "espada":      {"name": "Espada de São Jorge",   "frequency_days": 14},
+    "haworthia":   {"name": "Haworthia",             "frequency_days": 17},
+    "sansevieria": {"name": "Sansevieria",           "frequency_days": 21},
+}
+
+
+def compute_status(
+    frequency_days: int,
+    last_watered: str | None,
+    now: datetime | None = None,
+) -> str:
+    if last_watered is None:
+        return "never"
+    if now is None:
+        now = datetime.now(timezone.utc)
+    last_dt = datetime.fromisoformat(last_watered)
+    if last_dt.tzinfo is None:
+        last_dt = last_dt.replace(tzinfo=timezone.utc)
+    days_since = (now - last_dt).days
+    if days_since >= frequency_days:
+        return "overdue"
+    if days_since >= frequency_days - 2:
+        return "due_soon"
+    return "ok"
+
 
 def _db_path() -> str:
     return os.getenv("DB_PATH", "data/waterings.db")
