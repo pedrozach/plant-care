@@ -282,11 +282,43 @@
     .status-due_soon { background: #e65100; }
     .status-overdue  { background: #b71c1c; }
     .status-never    { background: #546e7a; }
+
+    /* Watering button */
+    .water-btn {
+      display: none;
+      width: 100%;
+      margin-top: 16px;
+      padding: 10px 0;
+      background: var(--green-mid);
+      color: var(--cream);
+      border: none;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .water-btn:hover { background: var(--green-deep); }
+
+    /* Lock icon */
+    #lock-icon {
+      position: absolute;
+      top: 20px; right: 24px;
+      font-size: 20px;
+      cursor: pointer;
+      z-index: 10;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    #lock-icon:hover { opacity: 1; }
   </style>
 </head>
 <body>
 
 <header>
+  <span id="lock-icon" title="Desbloquear regas">🔒</span>
   <div class="leaf-deco l1">🌿</div>
   <div class="leaf-deco l2">🍃</div>
   <p class="header-label">Guia de Cuidados</p>
@@ -322,6 +354,7 @@
           </div>
         </div>
       </div>
+      <button class="water-btn">💧 Reguei hoje</button>
     </div>
   </div>
 
@@ -351,6 +384,7 @@
           </div>
         </div>
       </div>
+      <button class="water-btn">💧 Reguei hoje</button>
     </div>
   </div>
 
@@ -380,6 +414,7 @@
           </div>
         </div>
       </div>
+      <button class="water-btn">💧 Reguei hoje</button>
     </div>
   </div>
 
@@ -409,6 +444,7 @@
           </div>
         </div>
       </div>
+      <button class="water-btn">💧 Reguei hoje</button>
     </div>
   </div>
 
@@ -438,6 +474,7 @@
           </div>
         </div>
       </div>
+      <button class="water-btn">💧 Reguei hoje</button>
     </div>
   </div>
 
@@ -467,6 +504,7 @@
           </div>
         </div>
       </div>
+      <button class="water-btn">💧 Reguei hoje</button>
     </div>
   </div>
 
@@ -496,6 +534,7 @@
           </div>
         </div>
       </div>
+      <button class="water-btn">💧 Reguei hoje</button>
     </div>
   </div>
 
@@ -506,5 +545,84 @@
   Criado com carinho para nunca mais esquecer de regar as plantas.
 </footer>
 
+<script>
+  const SECRET_KEY = 'plant_secret';
+  const STATUS_LABELS = {
+    ok: 'Em dia',
+    due_soon: 'Em breve',
+    overdue: 'Atrasada',
+    never: 'Nunca regada',
+  };
+
+  function isUnlocked() {
+    return !!localStorage.getItem(SECRET_KEY);
+  }
+
+  function updateLockUI() {
+    const icon = document.getElementById('lock-icon');
+    const buttons = document.querySelectorAll('.water-btn');
+    if (isUnlocked()) {
+      icon.textContent = '🔓';
+      buttons.forEach(b => b.style.display = 'block');
+    } else {
+      icon.textContent = '🔒';
+      buttons.forEach(b => b.style.display = 'none');
+    }
+  }
+
+  async function loadWaterings() {
+    try {
+      const res = await fetch('/api/waterings');
+      const data = await res.json();
+      data.forEach(({ plant_id, status }) => {
+        const card = document.querySelector(`[data-plant-id="${plant_id}"]`);
+        if (!card) return;
+        const badge = card.querySelector('.status-badge');
+        badge.className = `status-badge status-${status}`;
+        badge.textContent = STATUS_LABELS[status] || status;
+      });
+    } catch {
+      document.querySelectorAll('.status-badge').forEach(b => {
+        b.className = 'status-badge status-never';
+        b.textContent = 'Sem ligação';
+      });
+    }
+  }
+
+  document.getElementById('lock-icon').addEventListener('click', () => {
+    if (isUnlocked()) {
+      localStorage.removeItem(SECRET_KEY);
+    } else {
+      const secret = prompt('Palavra-passe:');
+      if (secret) localStorage.setItem(SECRET_KEY, secret);
+    }
+    updateLockUI();
+  });
+
+  document.querySelectorAll('.water-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const plantId = btn.closest('[data-plant-id]').dataset.plantId;
+      const secret = localStorage.getItem(SECRET_KEY);
+      try {
+        const res = await fetch(`/api/water/${plantId}`, {
+          method: 'POST',
+          headers: { 'X-App-Secret': secret },
+        });
+        if (res.status === 401) {
+          localStorage.removeItem(SECRET_KEY);
+          updateLockUI();
+          alert('Palavra-passe incorreta.');
+          return;
+        }
+        loadWaterings();
+      } catch {
+        alert('Não foi possível registar a rega.');
+      }
+    });
+  });
+
+  loadWaterings();
+  updateLockUI();
+</script>
 </body>
 </html>
