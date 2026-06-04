@@ -1,12 +1,13 @@
 import os
-import sqlite3
 from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timezone
 
+import psycopg
 from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from psycopg.rows import dict_row
 
 load_dotenv()
 
@@ -41,31 +42,23 @@ def compute_status(
     return "ok"
 
 
-def _db_path() -> str:
-    return os.getenv("DB_PATH", "data/waterings.db")
+def _db_url() -> str:
+    return os.getenv("DATABASE_URL", "")
 
 
 @contextmanager
 def get_db():
-    conn = sqlite3.connect(_db_path())
-    conn.row_factory = sqlite3.Row
-    try:
+    with psycopg.connect(_db_url(), row_factory=dict_row) as conn:
         yield conn
-        conn.commit()
-    finally:
-        conn.close()
 
 
 def init_db() -> None:
-    db_dir = os.path.dirname(_db_path())
-    if db_dir:
-        os.makedirs(db_dir, exist_ok=True)
     with get_db() as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS watering_logs (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                id         SERIAL PRIMARY KEY,
                 plant_id   TEXT NOT NULL,
-                watered_at TEXT NOT NULL
+                watered_at TIMESTAMPTZ NOT NULL
             )
         """)
 
@@ -86,7 +79,10 @@ def get_waterings():
             "SELECT plant_id, MAX(watered_at) AS watered_at "
             "FROM watering_logs GROUP BY plant_id"
         ).fetchall()
-    last_by_plant = {row["plant_id"]: row["watered_at"] for row in rows}
+    last_by_plant = {
+        row["plant_id"]: row["watered_at"].isoformat() if row["watered_at"] else None
+        for row in rows
+    }
     return [
         {
             "plant_id": pid,
@@ -107,11 +103,10 @@ def water_plant(
         raise HTTPException(status_code=401, detail="Unauthorized")
     if plant_id not in PLANTS:
         raise HTTPException(status_code=404, detail="Plant not found")
-    watered_at = datetime.now(timezone.utc).isoformat()
     with get_db() as conn:
         conn.execute(
-            "INSERT INTO watering_logs (plant_id, watered_at) VALUES (?, ?)",
-            (plant_id, watered_at),
+            "INSERT INTO watering_logs (plant_id, watered_at) VALUES (%s, %s)",
+            (plant_id, datetime.now(timezone.utc)),
         )
     return {"ok": True}
 
@@ -119,6 +114,11 @@ def water_plant(
 @app.get("/")
 def serve_index():
     return FileResponse("index.html")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def serve_favicon():
+    return FileResponse("images/fav-icon.png", media_type="image/png")
 
 
 app.mount("/images", StaticFiles(directory="images"), name="images")

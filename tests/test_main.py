@@ -1,19 +1,34 @@
 import os
 import pytest
 from datetime import datetime, timezone
+
+import psycopg
 from fastapi.testclient import TestClient
 
 from main import compute_status
 
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+
+
+def _require_db():
+    if not DATABASE_URL:
+        pytest.skip("DATABASE_URL not set — skipping integration tests")
+
 
 @pytest.fixture(autouse=True)
-def setup_env(tmp_path, monkeypatch):
-    monkeypatch.setenv("DB_PATH", str(tmp_path / "test.db"))
+def setup_env(monkeypatch):
     monkeypatch.setenv("APP_SECRET", "secret123")
 
 
 @pytest.fixture
-def client():
+def reset_db():
+    _require_db()
+    with psycopg.connect(DATABASE_URL) as conn:
+        conn.execute("DROP TABLE IF EXISTS watering_logs")
+
+
+@pytest.fixture
+def client(reset_db):
     from main import app
     with TestClient(app) as c:
         yield c
@@ -42,7 +57,6 @@ def test_compute_status_overdue():
 
 
 def test_compute_status_boundary_due_soon():
-    # exactly 2 days before frequency → due_soon
     now = datetime(2026, 5, 17, 12, 0, 0, tzinfo=timezone.utc)
     last = datetime(2026, 5, 12, 12, 0, 0, tzinfo=timezone.utc)  # 5 days ago, frequency 7
     assert compute_status(7, last.isoformat(), now=now) == "due_soon"
@@ -68,10 +82,10 @@ def test_get_waterings_never_status_when_no_log(client):
 
 def test_get_waterings_ok_status_after_watering(client):
     from main import get_db
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
     with get_db() as conn:
         conn.execute(
-            "INSERT INTO watering_logs (plant_id, watered_at) VALUES (?, ?)",
+            "INSERT INTO watering_logs (plant_id, watered_at) VALUES (%s, %s)",
             ("hedera", now),
         )
     res = client.get("/api/waterings")
